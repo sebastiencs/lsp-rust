@@ -10,8 +10,9 @@
 
 (require 'rust-mode)
 (require 'lsp-mode)
+(require 'json)
 
-(defun lsp--rust-rls-command ()
+(defun lsp-rust--rls-command ()
   (let ((rls-root (getenv "RLS_ROOT")))
     (if rls-root
 	`("cargo" "+nightly" "run" "--quiet" ,(concat
@@ -28,13 +29,20 @@
 (lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsEnd"
 			    #'(lambda (_w _p)))
 
+(defun lsp-rust--get-root ()
+  (let (dir)
+    (unless
+	(ignore-errors
+	  (let* ((output (shell-command-to-string "cargo locate-project"))
+		 (js (json-read-from-string output)))
+	    (setq dir (cdr (assq 'root js)))))
+      (error "Couldn't find root for project at %s" default-directory))
+    dir))
+
 ;;;###autoload
 (lsp-define-client 'rust-mode "rust" 'stdio
-		   #'(lambda ()
-		       (read-directory-name
-			"Workspace root (should contain Cargo.toml): "
-			default-directory))
-		   :command (lsp--rust-rls-command)
+		   #'lsp-rust--get-root
+		   :command (lsp-rust--rls-command)
 		   :name "Rust Language Server")
 
 (provide 'lsp-rust)
