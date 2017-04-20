@@ -33,7 +33,7 @@
 		 (js (json-read-from-string output)))
 	    (setq dir (cdr (assq 'root js)))))
       (error "Couldn't find root for project at %s" default-directory))
-    dir))
+    (file-name-directory dir)))
 
 ;;;###autoload
 (lsp-define-client 'rust-mode "rust" 'stdio
