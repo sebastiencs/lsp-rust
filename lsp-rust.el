@@ -13,21 +13,17 @@
 (require 'json)
 
 (defun lsp-rust--rls-command ()
-  (let ((rls-root (getenv "RLS_ROOT")))
-    (if rls-root
-	`("cargo" "+nightly" "run" "--quiet" ,(concat
-					       "--manifest-path="
-					       (concat
-                                                (file-name-as-directory
-						 (expand-file-name rls-root))
-                                                "Cargo.toml"))
-	  "--release")
-      "rls")))
-
-(lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsBegin"
-			    #'(lambda (_w _p)))
-(lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsEnd"
-			    #'(lambda (_w _p)))
+  (let ((rls-root (getenv "RLS_ROOT"))
+	(rls-path (executable-find "rls")))
+    (if rls-path
+	rls-path
+      (when rls-root
+	`("cargo" "+nightly" "run" "--quiet"
+	  ,(concat "--manifest-path="
+		   (concat
+		    (file-name-as-directory (expand-file-name rls-root))
+		    "Cargo.toml"))
+	  "--release")))))
 
 (defun lsp-rust--get-root ()
   (let (dir)
@@ -45,4 +41,8 @@
 		   :command (lsp-rust--rls-command)
 		   :name "Rust Language Server")
 
+(lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsBegin"
+			    #'(lambda (_w _p)))
+(lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsEnd"
+			    #'(lambda (_w _p)))
 (provide 'lsp-rust)
