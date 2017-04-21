@@ -36,10 +36,10 @@
     (file-name-directory dir)))
 
 ;;;###autoload
-(lsp-define-client 'rust-mode "rust" 'stdio
+(lsp-define-stdio-client 'rust-mode "rust" 'stdio
 		   #'lsp-rust--get-root
-		   :command (lsp-rust--rls-command)
-		   :name "Rust Language Server")
+		    "Rust Language Server"
+		   (lsp-rust--rls-command))
 
 (lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsBegin"
 			    #'(lambda (_w _p)))
