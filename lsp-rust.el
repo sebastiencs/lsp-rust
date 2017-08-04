@@ -35,11 +35,8 @@
       (error "Couldn't find root for project at %s" default-directory))
     (file-name-directory dir)))
 
-;;;###autoload
 (lsp-define-stdio-client 'rust-mode "rust" 'stdio
-		   #'lsp-rust--get-root
-		    "Rust Language Server"
-		   (lsp-rust--rls-command))
+			 #'lsp-rust--get-root "Rust Language Server" nil :command-fn #'lsp-rust--rls-command)
 
 (lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsBegin"
 			    #'(lambda (_w _p)))
