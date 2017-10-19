@@ -122,3 +122,4 @@ at the environment variable RLS_ROOT, if set."
   (lsp-rust-set-config "goto_def_racer_fallback" val))
 
 (provide 'lsp-rust)
+;;; lsp-rust ends here
