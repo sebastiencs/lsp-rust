@@ -35,18 +35,27 @@
 (defvar lsp-rust--config-options (make-hash-table))
 (defvar lsp-rust--diag-counters (make-hash-table))
 
+(defcustom lsp-rust-rls-command '("rls")
+  "The command used to launch the RLS.
+
+This should be a list of strings, the first string being the
+executable, and the remaining strings being the arguments to this
+executable.
+
+If this variable is nil, lsp-rust will try to use the RLS located
+at the environment variable RLS_ROOT, if set."
+  :type '(repeat (string)))
+
 (defun lsp-rust--rls-command ()
-  (let ((rls-root (getenv "RLS_ROOT"))
-	(rls-path (executable-find "rls")))
-    (if rls-path
-	rls-path
-      (when rls-root
-	`("cargo" "+nightly" "run" "--quiet"
-	  ,(concat "--manifest-path="
-		   (concat
-		    (file-name-as-directory (expand-file-name rls-root))
-		    "Cargo.toml"))
-	  "--release")))))
+  "Return the command used to start the RLS for defining the LSP Rust client."
+  (or lsp-rust-rls-command
+      (when-let ((rls-root (getenv "RLS_ROOT")))
+        `("cargo" "+nightly" "run" "--quiet"
+          ,(concat "--manifest-path="
+                   (concat
+                    (file-name-as-directory (expand-file-name rls-root))
+                    "Cargo.toml"))
+          "--release"))))
 
 (defun lsp-rust--get-root ()
   (let (dir)
