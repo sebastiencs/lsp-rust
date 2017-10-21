@@ -34,6 +34,6 @@ If you want to automatically launch `lsp-mode` and `flycheck-mode` whenever you
 open a rust buffer, you can add the following to your init file:
 
 ```emacs-lisp
-(add-hook 'rust-mode-hook #'lsp-mode)
+(add-hook 'rust-mode-hook #'lsp-rust-enable)
 (add-hook 'rust-mode-hook #'flycheck-mode)
 ```
