@@ -4,15 +4,16 @@
 
 ;; Author: Vibhav Pant <vibhavp@gmail.com>
 ;; Version: 1.0
-;; Package-Requires: ((lsp-mode "2.0") (rust-mode "0.3.0"))
+;; Package-Requires: ((lsp-mode "3.0"))
 ;; Keywords: rust
 ;; URL: https://github.com/emacs-lsp/lsp-rust
 
-(require 'rust-mode)
 (require 'lsp-mode)
+(require 'cl-lib)
 (require 'json)
 
 (defvar lsp-rust--config-options (make-hash-table))
+(defvar lsp-rust--diag-counters (make-hash-table))
 
 (defun lsp-rust--rls-command ()
   (let ((rls-root (getenv "RLS_ROOT"))
@@ -37,16 +38,27 @@
       (error "Couldn't find root for project at %s" default-directory))
     (file-name-directory dir)))
 
-(lsp-define-stdio-client 'rust-mode "rust" 'stdio
-			 #'lsp-rust--get-root "Rust Language Server" nil :command-fn #'lsp-rust--rls-command)
+(defconst lsp-rust--handlers
+  '(("rustDocument/diagnosticsBegin" . (lambda (_w _p)))
+    ("rustDocument/diagnosticsEnd" .
+     (lambda (w _p)
+       (when (< (cl-decf (gethash w lsp-rust--diag-counters 0)) 0)
+	 (message "RLS: done"))))
+    ("rustDocument/beginBuild" .
+     (lambda (w _p)
+       (cl-incf (gethash w lsp-rust--diag-counters 0))
+       (message "RLS: working")))))
 
-(lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsBegin"
-			    #'(lambda (_w _p)))
-(lsp-client-on-notification 'rust-mode "rustDocument/diagnosticsEnd"
-			    #'(lambda (_w _p)))
+(defun lsp-rust--initialize-client (client)
+  (mapcar #'(lambda (p) (lsp-client-on-notification client (car p) (cdr p)))
+	  lsp-rust--handlers))
+
+(lsp-define-stdio-client lsp-rust "rust" #'lsp-rust--get-root nil
+			 :command-fn #'lsp-rust--rls-command
+			 :initialize #'lsp-rust--initialize-client)
 
 (defun lsp-rust--set-configuration ()
-  (lsp--set-configuration `(:rust , lsp-rust--config-options)))
+  (lsp--set-configuration `(:rust ,lsp-rust--config-options)))
 
 (add-hook 'lsp-after-initialize-hook 'lsp-rust--set-configuration)
 
