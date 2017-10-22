@@ -18,7 +18,7 @@ your init file:
   (require 'lsp-rust))
 ```
 
-If you installed the RLS via `rustup' (the recommended way), then the `setq`
+If you installed the RLS via `rustup` (the recommended way), then the `setq`
 line tells `lsp-rust` how to launch the RLS.  If you would rather use the
 `RLS_ROOT` variable to locate the RLS, then set `lsp-rust-rls-command` to `nil`.
 
