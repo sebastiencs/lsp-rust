@@ -70,11 +70,13 @@
        (message "RLS: working")))))
 
 (defun lsp-rust--render-string (str)
-  (with-temp-buffer
-    (delay-mode-hooks (rust-mode))
-    (insert str)
-    (font-lock-ensure)
-    (buffer-string)))
+  (condition-case nil
+      (with-temp-buffer
+	(delay-mode-hooks (rust-mode))
+	(insert str)
+	(font-lock-ensure)
+	(buffer-string))
+    (error str)))
 
 (defun lsp-rust--initialize-client (client)
   (mapcar #'(lambda (p) (lsp-client-on-notification client (car p) (cdr p)))
