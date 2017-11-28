@@ -31,6 +31,7 @@
 (require 'cl-lib)
 (require 'json)
 (require 'font-lock)
+(require 'xref)
 
 (defvar lsp-rust--config-options (make-hash-table))
 (defvar lsp-rust--diag-counters (make-hash-table))
@@ -45,6 +46,18 @@ executable.
 If this variable is nil, lsp-rust will try to use the RLS located
 at the environment variable RLS_ROOT, if set."
   :type '(repeat (string)))
+
+(defun lsp-rust-find-implementations ()
+  "List all implementation blocks for a trait, struct, or enum at point."
+  (interactive)
+  (lsp--send-changes lsp--cur-workspace)
+  (let* ((impls (lsp--send-request (lsp--make-request
+                                    "rustDocument/implementations"
+                                    (lsp--text-document-position-params))))
+         (items (lsp--locations-to-xref-items impls)))
+    (if items
+        (xref--show-xrefs items nil)
+      (message "No implementation found for: %s" (thing-at-point 'symbol t)))))
 
 (defun lsp-rust--rls-command ()
   "Return the command used to start the RLS for defining the LSP Rust client."
