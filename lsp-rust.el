@@ -72,11 +72,11 @@ at the environment variable RLS_ROOT, if set."
     ("rustDocument/diagnosticsEnd" .
      (lambda (w _p)
        (when (< (cl-decf (gethash w lsp-rust--diag-counters 0)) 0)
-	 (message "RLS: done"))))
+	 (setq lsp-status nil))))
     ("rustDocument/beginBuild" .
      (lambda (w _p)
        (cl-incf (gethash w lsp-rust--diag-counters 0))
-       (message "RLS: working")))))
+       (setq lsp-status "(building)")))))
 
 (defun lsp-rust--render-string (str)
   (condition-case nil
