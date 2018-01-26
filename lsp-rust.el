@@ -50,14 +50,16 @@ at the environment variable RLS_ROOT, if set."
 (defun lsp-rust-find-implementations ()
   "List all implementation blocks for a trait, struct, or enum at point."
   (interactive)
-  (lsp--send-changes lsp--cur-workspace)
-  (let* ((impls (lsp--send-request (lsp--make-request
-                                    "rustDocument/implementations"
-                                    (lsp--text-document-position-params))))
-         (items (lsp--locations-to-xref-items impls)))
-    (if items
-        (xref--show-xrefs items nil)
-      (message "No implementation found for: %s" (thing-at-point 'symbol t)))))
+  (if (and (bound-and-true-p lsp-ui-peek-enable)
+           (fboundp 'lsp-ui-peek-find-custom))
+      (lsp-ui-peek-find-custom 'implementations "rustDocument/implementations")
+    (let* ((impls (lsp--send-request (lsp--make-request
+                                      "rustDocument/implementations"
+                                      (lsp--text-document-position-params))))
+           (items (lsp--locations-to-xref-items impls)))
+      (if items
+          (xref--show-xrefs items nil)
+        (message "No implementation found for: %s" (thing-at-point 'symbol t))))))
 
 (defun lsp-rust--rls-command ()
   "Return the command used to start the RLS for defining the LSP Rust client."
