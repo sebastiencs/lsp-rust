@@ -168,5 +168,15 @@ at the environment variable RLS_ROOT, if set."
   "Enable(t)/Disable(nil) goto-definition should use racer as fallback."
   (lsp-rust-set-config "goto_def_racer_fallback" val))
 
+;; (add-hook 'lsp-before-initialize-hook
+;;           (lambda ()
+;;             (lsp-register-client-capabilities
+;;              'lsp-rust-enable
+;;              '(:textDocument (:documentSymbol (:symbolKind (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+;;                                                               21 22 23 24 25 26 100 101 102 103 104 105 106 107
+;;                                                               108 109 110 111)))))))
+
+;; (setq lsp-before-initialize-hook nil)
+
 (provide 'lsp-rust)
 ;;; lsp-rust ends here
