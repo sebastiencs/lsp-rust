@@ -135,7 +135,7 @@
   "ERR."
   (let* ((group (flycheck-error-group err))
          (secondaries (gethash buffer-file-name lsp-rust-diagnostics--secondaries))
-         (secondaries (--filter (= (gethash "group" (lsp-diagnostic-original it)) group) secondaries)))
+         (secondaries (--filter (equal (gethash "group" (lsp-diagnostic-original it)) group) secondaries)))
     (lsp-rust-diagnostics-show-primary err)
     (lsp-rust-diagnostics-show-secondaries secondaries)
     (lsp-rust-diagnostics--list-labels)
