@@ -154,8 +154,8 @@
     )
   )
 
-;; (add-hook 'post-command-hook 'lsp-rust-diagnostics)
-;; (remove-hook 'post-command-hook 'lsp-ui-doc--make-request)
+;; (add-hook 'post-command-hook 'lsp-rust-diagnostics nil t)
+;; (remove-hook 'post-command-hook 'lsp-ui-doc--make-request t)
 
 (provide 'lsp-rust-diagnostics)
 ;;; lsp-rust-diagnostics.el ends here
