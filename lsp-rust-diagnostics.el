@@ -57,45 +57,32 @@
 
 (defun lsp-rust-diagnostics-show-primary (err)
   "ERR."
-  (let* ((string (flycheck-error-message err))
-         (no-label (> (length (split-string string "\n\n\n" t)) 1))
-         (strings (split-string string "\n\n" t))
-         label)
-    (unless no-label
-      (setq label (if (>= (length strings) 3)
-                      (nth 1 strings)
-                    (cadr strings))))
-
-    ;; (dolist (s strings)
-    ;;   (princ (format-message "STRINGS: %s\n" s)))
-
-    (setq strings (--map (with-temp-buffer
-                           (insert it)
-                           (set-face-foreground 'markdown-metadata-value-face "white")
-                           (set-face-foreground 'markdown-inline-code-face "sienna")
-                           (markdown-view-mode)
-                           (font-lock-ensure)
-                           (buffer-string))
-                         strings))
-
-    (setq strings (--map-first t (propertize it 'face '(:foreground "red" :weight 'ultra-bold)) strings))
-
-    (setq strings
-          (cond (no-label (string-join strings "\n"))
-                ((>= (length strings) 3) (string-join (-remove-at 1 strings) "\n\n"))
-                (t (car strings))))
-
-    (lsp-ui-doc--display 'a strings)
+  (-let* ((string (flycheck-error-message err))
+          ((message . rest) (split-string string "\n" t))
+          (label-notes (--split-with (not (or (s-starts-with? "help:" it)
+                                              (s-starts-with? "note:" it)
+                                              (s-starts-with? "hint:" it)))
+                                     rest))
+          (notes (string-join (cadr label-notes) "\n"))
+          (label (string-join (car label-notes) "\n")))
+    (message "ERROR: '%s'" err)
+    ;;(message "ERROR: '%s'\n[label-notes]: '%s'" err (mapconcat 'car notes "\n"))
+    ;; (message "ERROR: '%s'\n[label]: '%s'\n[notes]: '%s'" err label notes)
+    ;; (dolist (line notes)
+    ;;   (print (format-message "line: '%s'" (car line))))
+    (lsp-ui-doc--display 'a (concat (propertize message 'face '(:foreground "red"))
+                                    (unless (string-empty-p notes) (concat "\n\n" notes))))
     (push (list :line (flycheck-error-line err) :label label) lsp-rust-diagnostics-labels)
     ))
 
-(defun lsp-rust-diagnostics--list-labels nil
+(defun lsp-rust-diagnostics--list-labels ()
   "."
-  (let ((max-len (-max (--map (length (cdr it)) lsp-rust-diagnostics-labels))))
-    (dolist (label lsp-rust-diagnostics-labels)
-      (-let* (((&plist :line line :position position :label label) label))
-        (when (> (length label) 0)
-          (lsp-rust-diagnostics--show-label line label position max-len))))))
+  (when lsp-rust-diagnostics-labels
+    (let ((max-len (-max (--map (length (cdr it)) lsp-rust-diagnostics-labels))))
+      (dolist (label lsp-rust-diagnostics-labels)
+        (-let* (((&plist :line line :position position :label label) label))
+          (when (> (length label) 0)
+            (lsp-rust-diagnostics--show-label line label position max-len)))))))
 
 (defun lsp-rust-diagnostics--range-to-points (range)
   "RANGE."
@@ -131,11 +118,23 @@
       )
     ))
 
+;; (defun lsp-rust-diagnostics-display (err)
+;;   "ERR."
+;;   (message "ERROR: %s" err)
+;;   (let* ((group (flycheck-error-group err))
+;;          (secondaries (gethash buffer-file-name lsp-rust-diagnostics--secondaries))
+;;          (secondaries (--filter (equal (gethash "group" (lsp-diagnostic-original it)) group) secondaries)))
+;;     (lsp-rust-diagnostics-show-primary err)
+;;     (lsp-rust-diagnostics-show-secondaries secondaries)
+;;     (lsp-rust-diagnostics--list-labels)
+;;     ))
+
 (defun lsp-rust-diagnostics-display (err)
   "ERR."
   (let* ((group (flycheck-error-group err))
-         (secondaries (gethash buffer-file-name lsp-rust-diagnostics--secondaries))
-         (secondaries (--filter (equal (gethash "group" (lsp-diagnostic-original it)) group) secondaries)))
+         (secondaries (-some->> lsp-rust-diagnostics--secondaries
+                                (gethash buffer-file-name)
+                                (--filter (equal (gethash "group" (lsp-diagnostic-original it)) group)))))
     (lsp-rust-diagnostics-show-primary err)
     (lsp-rust-diagnostics-show-secondaries secondaries)
     (lsp-rust-diagnostics--list-labels)
